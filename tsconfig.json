@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "dist", // where to put the TS files
+    "target": "ES2017", // which level of JS support to target ES3 (IE 6 compatible), ES2015 (js 2015 version), ES2017
+    "declaration": true, // generate .d.ts file for type information
+    "declarationMap": true // declaration map to help IDE functions like "Go to Definition"
+  },
+  "include": [
+    "src"
+  ] // which files to compile
+}
