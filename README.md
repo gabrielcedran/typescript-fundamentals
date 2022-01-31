@@ -202,3 +202,13 @@ It happens because there is no way equivalence checks when invoking the operatio
 car.push('asd')
 car.push('asd')
 ```
+
+##### Notes
+
+Type systems:
+static vs dynamic type systems
+nominal vs structural types
+
+Duck typing = if it looks like a duck, swims like a duck and quacks like a duck it is probably a duck - another way of describing dynamic typing.
+
+Strong type and Weak type are terms generally used to refer to static and dynamic types but there is no concensus to what it really means.
