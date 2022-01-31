@@ -69,3 +69,136 @@ new Promise(sum(1, 2)); // compilation error
 
 It might be a good idea to only explicitly declare the type when typescript cannot infer it (does not apply for function's return type nor arguments - would it be better to surfice the problem where the function is declared or where it is used?). It helps to keep the source base cleaner and also helps when refactoring with less things to change.
 
+
+### Objects
+
+Objects consist of properties and the type those properties can be assigned is similar to regular variables. 
+
+```
+let car: {
+  make: string
+  model: string
+  year: number
+  chargeVoltage?: number // optional
+}
+
+car.year = 'abc' // error
+```
+
+Functions arguments can have the structure of the object which it receives defined in line as though it was a primitive:
+
+```
+function evaluateCar(car: {
+  make: string
+  model: string
+  year: number
+  chargeVoltage?: number
+}): number {
+  return 0;
+}
+
+evaluateCar({make: 'Toyota', model: 'Corolla', year: 2020});
+```
+
+#### Type Guard
+
+Typescript is smart enough to eliminate the possibility of an optional property being undefinied when a undefinied check is performed before accessing the property.
+
+```
+  car.chargeVoltage.toFixed(1234) // compilation error
+  
+  if (car.chargeVoltage)
+    `${car.chargeVoltage.toFixed(1234)}` // no compilation error as the chargeVoltage presence is being checked beforehand.
+```
+
+#### Excess property checking
+
+Typescript ensures that object literals only contain the necessary properties and nothing else.
+If any extra property is passed with an object literal type script will give a compilation error.
+
+```
+evaluateCar({make: 'Toyota', model: 'Corolla', year: 2020, colour: 'RED'});
+```
+
+The reason for that is that as the object literal is passed directly to the function (and the function does not declare that property) and is not reusable anywhere else, that property will never be accessible neither by the function itself nor by whatever subfunction this object may be passed - nobody has access to it.
+
+To solve this issue one of the following solutions could be applied:
+
+1. Remove the colour property from the object
+2. add the colour property to the function argument type
+3. Instead of declaring the object inline as an object literal, create the object beforehand and pass to the function as parameter (in this case the colour is not accessible by evaluteCar function but it may be accessible in other places) 
+
+```
+  const car = {make: 'Toyota', model: 'Corolla', year: 2020, colour: 'RED'};
+  evaluateCar(car); // not accessing inside this function scope
+  car.colour; // but accessible outside - and even other functions might declare colour as part of their function argument type
+```
+
+#### Index Signatures 
+
+Typescript allows storage of a consistent type of value under an arbitrary key (when the object property is not rigid) via what is called index signatures. Example:
+
+```
+const phones = {
+  home: {country: "+44", number: "827-123-111"},
+  work: {country: "+44", number: "827-123-111"}
+}
+```
+
+Type definition:
+
+```
+const phones: {
+  [k: string]: {
+    country: string
+    number: string
+  }
+} = {} // just initialised with an empty object
+```
+
+#### Arrays
+
+Typescript is capable of inferring the type of elements of an array, even when it is a complex object.
+
+```
+const arr1 = ["a", "b"] // const arr1: string[]
+
+const cars = [{make: 'Toyota', model: 'Corolla'}] // const cars: [{make string; model string;}]
+```
+
+However in case one wants to be explicit, it is possible to define the type upfront:
+
+```
+const arr1: string[] = ["a", "b"]
+
+const cars: {
+  make: string
+  model: string
+}[] = [{make: 'Toyota', model: 'Corolla'}]
+```
+
+#### Tuples
+
+Typescript tries to make assumptions when determining types so that it provides type safety but not getting in the way of the developer.
+For tuples typescript assumes that the type is a heterogeneous array rather than a tuple to prevent imposing restrictions in unwanted situations - it is not possible to determine if the intended type was an array or a tuple due to the similarities in the declaration.
+
+
+```
+const car = ["Toyota", "Corolla", 1997]; // const car: (string | number)[]
+const [make, model, year] = car // const year: string | number - as it is an array of number or string any of this could be in those positions, thus it is not possible to infer the type when destructuring 
+```
+
+The way to declare tuples properly is to do so explicitly - so that position and types are inforced
+
+```
+const car: [string, string, number] = ["Toyota", "Corolla", 1997]; // const car: [string, string, number]
+const [make, model, year] = car // now typescript is capable of confidently telling what type is in each position
+```
+
+Caveats: even though typescript enforces tuple size at assignment, it does not inforces anything afterwards (just types) - it is possible to pop and push values at wish.
+It happens because there is no way equivalence checks when invoking the operation methods.
+
+```
+car.push('asd')
+car.push('asd')
+```
