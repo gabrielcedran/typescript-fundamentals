@@ -203,6 +203,45 @@ car.push('asd')
 car.push('asd')
 ```
 
+#### Union Types - Narrowing with type guards
+
+Union types are defined using a pipe:
+
+```
+const colour: 'red' | 'black' = 'red';
+```
+
+When using union with tuples, for instance to return the result and content of a processing, initially typescript only allows access to what is safe and guaranteed to be shared between the objects and structures.
+In order to be able to access specific properties, it is necessary to narrow down the result via type guard - unless typescript is capable of defining the content when assigning by inference.
+
+```
+
+function fetchUserData(): ['error', Error] | ['success', {name: string; email: string;}] {
+  return ['success', {name: 'Mary', email: 'test@gmail.com'}]
+}
+
+const outcome = fetchUserData();
+outcome[1].name; // only name is accessibe as it is a common property between the inline object and error (and even their types match)
+
+// this concept is known as discriminated unions or "tagged" union type
+// typescript is capable of performing this kind of type guarding thank to the predetermined keys that could be stored in the first position of the tuple ('error' | 'success). 
+if (outcome[0] === 'error') {
+  outcome[1] // here typescript treats this object as an error due to the control flow via type guard 
+} else {
+  outcome[1].email // here typescript assumes that it could be anything that didn't enter the first condition, thus it could only be that object structure
+}
+
+// another way of narrowing down the types is with instanceof, however considering that typescript is rather has a structural rather than nominal type system, it could be quite limiting in some situations 
+
+const [result, content] = outcome
+if (content instanceof Error) {
+  outcome[1] // here typescript treats this object as an error due to the control flow via type guard 
+} else {
+  outcome[1].email // here typescript assumes that it could be anything that didn't enter the first condition, thus it could only be that object structure
+}
+
+```
+
 ##### Notes
 
 Type systems:
