@@ -242,6 +242,27 @@ if (content instanceof Error) {
 
 ```
 
+Intersection types are defined using a ampersand. It behaves as a pseudo inheritance for types.
+
+```
+
+function test(): Date & { end: string} { // returns an object which contains everything from Date and a string property named end
+  return {...new Date, end: 'abc'}
+}
+
+type car = { // types one of the very few cases where the type definition (information) is defined on the right side of the assignment operator 
+  make: string
+  model: string
+}
+
+type truck = car & {
+  size: number
+}
+
+```
+
+
+
 ##### Notes
 
 Type systems:
