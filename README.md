@@ -261,6 +261,135 @@ type truck = car & {
 
 ```
 
+#### Type aliases 
+
+Type aliases are meant to give convenient names for types. Instead of keep repeating the same type all over the place (on variable, arguments, function results, etc), it is better to have a centralised definition and simply reference it.
+
+```
+// @types.ts
+export type car = {
+  make: string
+  model: string
+}
+
+// @index.ts
+import { Car } from './types';
+
+const newCar: Car = {
+  make: 'Toyota',
+  model: 'Corolla'
+}
+
+```
+
+By convention type aliases must be named using the Title pattern.
+
+There can never two type aliases with the same names in the same scope - this is a typescript limitation and it does not apply to interfaces.
+
+#### Interfaces
+
+Interfaces are more limited than type aliases and they can only be used to define object types. Union type operator does not work with interfaces as the result would be something that is not an object type (I have these two possibilities and the result is one or another - interfaces cannot describe something like that).
+
+Inheritance - typescript calls keywords like extends and imports `heritage clauses`. These keywords are used to describe ancestry in an object oriented hierarchy.
+
+`Extends` is used to describe inheritance between like things - classes can extend from classes and interfaces from interfaces.
+`Implements` is used to describe inheritance between unlike things - classes can implement interfaces.
+
+```
+interface Animal {
+  name: string
+  eat(food: string): void
+}
+
+interface Canine extends Animal {
+  bark(): void;
+}
+
+class Dog implements Canine {
+  name: string
+  eat(food: string) {}
+  bark() {}
+}
+
+class Pug extends Dog {
+
+}
+```
+
+Even though it is possible for classes to extend from type aliases it is generally not a good a idea. Types more ofter than not can become a union type, what would break the source base as the object oriented inheritance does not support it.
+
+```
+// this case works
+type Animal = {
+  name: string
+  eat(food: string): void
+}
+
+class Dog implements Animal {
+  name: string
+  eat(food: string) {}
+  bark() {}
+}
+
+// but this does not
+type Animal = {
+  name: string
+  eat(food: string): void
+} | string
+
+class Dog implements Animal {
+  name: string
+  eat(food: string) {}
+  bark() {}
+}
+```
+
+###### Interfaces are OPEN in javascript
+
+It means that every time that an interface is defined with the same name of an existing interface, all that happens is that the new definitions are added on top of the previous one(s). No matter the place. It is not localized.
+
+Example:
+
+```
+interface Dog {
+  bark(): void;
+}
+
+function test2(dog: Dog) {
+  dog.bark(); 
+  dog.eat(); // it is available and functional
+}
+
+interface Dog {
+  eat(): void;
+}
+```
+
+It is possible to augment even interfaces from the javascript api (for instance the Window interface).
+
+##### Interfaces or Type aliases
+
+Generally there is no advantage or disadvantage using one or another. There are few situations that one might make more sense than the other:
+1. When you need to define something other than an object (e.g when you have to use union to declare that a function returns a number or (|) an error), it makes more sense to stick with types
+2. If it is something meant to be consumed by a class (Dog extends Animal), it makes more sense to stick with interfaces
+3. If clients and consumers of your types must be able to augment them, then you must use interfaces. 
+
+##### Recursive Types
+
+When you need to define an object that self-reference itself all you have to do is the following:
+```
+type NestedNumbers = number | NestedNumbers[];
+
+const val: NestedNumbers = [3, 4, [4, 3, [8], 3], 3, [1, 2]];
+
+// type guard to eliminate the possibility of val being just a number
+if (typeof val !== 'number') {
+  val.push(123)
+  val.push([41, 123]);
+  val.push("this does not work");
+}
+
+```
 
 
 ##### Notes
