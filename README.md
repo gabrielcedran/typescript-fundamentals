@@ -148,6 +148,7 @@ const phones = {
 Type definition:
 
 ```
+// index signature
 const phones: {
   [k: string]: {
     country: string
