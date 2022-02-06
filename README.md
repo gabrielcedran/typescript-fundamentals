@@ -615,6 +615,122 @@ else {
 }
 ```
 
+#### Type guards and narrowing
+
+When using union to define what values a variable could store causes typescript to not know what will be stored in that variable at runtime. In order to provide type safety, typescript only allows access to what is common to all potential objects and structures, if there is any - otherwise no access to anything.
+
+To be able to access specific properties of potential types it is necessary to perform narrowing, that is a type guard check that ensures the type of object within a block or code (or branch) based on conditionals.
+
+Some of the type guards provided by the api of the box are:
+
+```
+let value: Date | null | undefined | "pineapple" | [number] | {dateRange: [Date, Date]}
+
+// instanceof
+if (value instanceof Date) {
+  value.getDate() // now it is ensured that it is a Date, not any of the other possibilities 
+}
+
+// typeof
+else if (typeof value === "string") {
+  value // not only does typescript know that is it a string but also that it is the string "pineapple"
+}
+
+// Specific value check
+else if (value === null) {
+  value // it can only be null in this case
+}
+
+// Truthy / falsy check - be careful with 0, empty string and false
+else if (!value) {
+  value // can only be undefined in this case
+}
+
+// Built-in functions
+else if (Array.isArray(value)) {
+  value.push(123) // at this point it is ensured to be an array
+}
+
+// Property presence check
+else if ("dateRange" in value) {
+  value // it can only be the last defined type
+}
+
+// never
+else {
+  // nothing else left - exhaustive conditional 
+}
+
+```
+
+##### User defined type guards
+
+User defined type guards are meant for way more comprehensive and complex cases, where using just the standard type guards would be cumbersome and at some extent impracticable.
+
+Some times just creating conditionals (or even functions that return a boolean) based on the standard type guards is not enough to tell typescript which type it is coping with. In order to create a custom type guard it is necessary to use a especial return type that contains the `is` keyword and the type being tested.
+
+```
+interface Car {
+  name: string
+  make: string
+  year: number
+}
+
+let maybeCar: unknown
+
+// narrowing the value
+if (isCarLike(maybeCar)) {
+    maybeCar.make // now typescript is capable of understanding the type we are working with in this branch of code
+}
+
+// the guard
+function isCarLike(valueToTest: any): valueToTest is Car { // especial return type "valueToTest is Car"
+  return  (maybeCar &&
+  typeof maybeCar === "object" &&
+  "make" in maybeCar &&
+  typeof maybeCar["make"] === "string" &&
+  "model" in maybeCar &&
+  typeof maybeCar["model"] === "string" &&
+  "year" in maybeCar &&
+  typeof maybeCar["year"] === "number")
+
+}
+```
+
+Another way of creating custom type guards is with assertion. In case the provided type is not what is expected an error is thrown. The cool part of using this method is that it is not necessary to be used with conditional and a block of code.
+
+```
+// the guard
+function assertsIsCarLike(
+  valueToTest: any
+): asserts valueToTest is CarLike {
+  if (
+    !(
+      valueToTest &&
+      typeof valueToTest === "object" &&
+      "make" in valueToTest &&
+      typeof valueToTest["make"] === "string" &&
+      "model" in valueToTest &&
+      typeof valueToTest["model"] === "string" &&
+      "year" in valueToTest &&
+      typeof valueToTest["year"] === "number"
+    )
+  )
+    throw new Error(
+      `Value does not appear to be a CarLike${valueToTest}`
+    )
+}
+
+// using the guard
+maybeCar // unknown
+assertsIsCarLike(maybeCar)
+maybeCar // CarLike
+```
+
+**** We need to be careful with user defined type guards to not end up with cases that are false positives and blow up in runtime - we are telling typescript what is fine but if we are not doing so concisely it will assume it is ok at compilation time but it won't work in runtime. 
+Type guards are the glue between compile time validation and runtime behaviour.
+
+
 
 ##### Notes
 
