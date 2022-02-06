@@ -392,6 +392,95 @@ if (typeof val !== 'number') {
 
 ```
 
+#### Callable types
+
+Both interfaces and type aliases offer the capability to descibre call signatures:
+
+```
+interface TwoNumbersCalc {
+  (x: number, y: number): number
+}
+
+const add: TwoNumbersCalc = (a, b) => a + b // even though it is not possible to infer argument types (and sometimes return), in this case typescript is capable of defining the types thanks to the interface
+
+type TwoNumbersCalc = (x: number, y: number) => number
+const subtract: TwoNumbersCalc = (a, b) => a - b
+
+```
+
+##### void x undefined
+
+There are some succinct differences between void and undefinied. Functions that declare their return as `void` are telling that their return should be ignored - and actually that return could be anything. Functions that declare their return as `undefined` are telling that they actually return undefined, not anything else.
+
+#### Function overloading
+Sometimes it might be necessary to create functions that handle very high level operations and receive multiple arguments that have some sort of dependency between them. Using union type would not impose any kind of restriction to those dependencies.
+
+Imagine a function that handles events of iframes and forms (FormSubmitHandler and MessageHandler) and also receives the related elements (HTMLFormElement and HTMLIFrameElement respectively). The combinations `FormSubmitHandler and HTMLIFrameElement` and `MessageHandler and HTMLFormElement` wouldn't make sense. To help typescript understand that dependency and enforce it, it is necessary to use the function overloading feature:
+
+```
+type FormSubmitHandler = (data: FormData) => void
+type MessageHandler = (evt: MessageEvent) => void
+
+function handleMainEvent(
+  elem: HTMLFormElement,
+  handler: FormSubmitHandler
+)
+function handleMainEvent(
+  elem: HTMLIFrameElement,
+  handler: MessageHandler
+)
+function handleMainEvent(
+  elem: HTMLFormElement | HTMLIFrameElement,
+  handler: FormSubmitHandler | MessageHandler
+) {}
+
+const myFrame = document.getElementsByTagName("iframe")[0]
+        
+const myForm = document.getElementsByTagName("form")[0]
+        
+handleMainEvent(myFrame, (val) => { // due to the function overloading typescript is capable of inferring and enforcing that the handler that goes with iframes is actually MessageHandler.
+      
+})
+handleMainEvent(myForm, (val) => {
+      
+})
+```
+
+#### this keyword
+
+Sometimes the `this` keyword is within a function that does not have its scope clear (at least for typescript). For instance, when a function is wired on the event of a DOM elements - onClick event of a button. In this case typescript is not capable of determining what exactly the keyword refers to and behaves like `any` - thus no useful autocomplete and properties.
+
+```
+<button onClick="myClickHandler">
+
+...
+
+function myClickHandler(event: Event) {
+  this.disabled = true // typescript does no offer autocomplete and type safety
+}
+
+myClickHandler(new Event("click")) // this is a dangerous and misplaced call as it won't be within the expected scope and won't have any compilation error
+
+```
+
+To solve this issue and guide typescript that the `this` within the function will be related to the DOM element that emitted the event, it is necessary to either declare a `this type` with the functions arguments (example 1) or bind it (example 2).
+
+```
+function myClickHandler(this: HTMLButtonElement, event: Event) {
+  this.disabled = true; // all properties from the button element are now available and we have type safety 
+}
+
+// Now we would have to bind the expected parameter with the function or use the call function to provide the correct this scope
+
+const myButton = document.getElementsByTagName("button")[0];
+myClickHandler.call(myButton, new Event("click"))
+
+const boundHandler = myClickHandler.bind(myButton)
+boundHandler(new Event("click"))
+```
+
+*In other words, typescript does not know that the function was wired with a DOM element.
+
 
 ##### Notes
 
