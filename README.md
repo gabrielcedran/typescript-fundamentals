@@ -530,10 +530,91 @@ It is a nice and convenient way of avoiding repetition (in the example above, ea
 ```
 class Car {
   constructor(public make: string, public model: string, ...) {
-    
+
   }
 }
 ```
+
+#### Top and Bottom types
+
+Types describe the values that a variable can store. 
+
+Top types are types that describe anything thus are the most flexible ones. The set of things a top type could be is any value allowable in javascript. Two examples are `any` and `unknown`.
+
+```
+let flexible: any = 4
+flexible = "An amazing text"
+flexible = window.document
+
+// the risks around using any stems from the fact that there will be no type safety of any sort from typescript. Leaving the errors to occur at runtime
+let flexible: any = 4
+flexible.typescript.wont.complain // typescript compiler is perfectly happy about it but the error will blow up at runtime when the code is being executed as it will clearly be a number
+```
+
+The essential difference between `any` and `unknown` is that the latter cannot be used unless it is narrowed via type guard.
+Typescript forces you to verify before using it
+
+```
+let flexible: unknown = 4
+flexible = "An amazing text" // reassign the value for another type as it does for `any`
+flexible = window.document
+
+flexible.typescript.will.complain.as.it.hasnt.been.narrowed // typescript won't allow it and will print a compilation error as it need to be type guarded first
+
+if (typeof flexible === "string") {
+flexible.substring(1)
+}
+```
+
+Bottom types is the complete opposite of top types and describe things that can hold no possible values and is represented by the type `never`. This type is used along with exhaustive conditional where no final option is left behind:
+
+```
+class Car {
+  drive() { }
+}
+class Truck {
+  drive() { }
+}
+type Vehicle = Car | Truck
+
+let myVehicle: Vehicle = obtainRandomVehicle()
+
+if (myVehicle instanceof Car) { ... }
+else if (myVehicle instanceof Truck) { ... }
+else {
+  const neverValye: never = myVehicle // there is no other option left, thus it is a never
+}
+```
+
+The else clause can be considered dead code however it provides safety that is someone extends the Vehicle type, typescript will force them to handle it and not leave it behind as compilation error will light up every where that the previous narrowing is happening (the else case won't be never anymore).
+
+```
+class Boat() { } 
+type Vehicle = Car | Truck | Boat
+
+if (myVehicle instanceof Car) { ... }
+else if (myVehicle instanceof Truck) { ... }
+else {
+  const neverValye: never = myVehicle // compilation error as now Boat is left.
+}
+
+```
+
+To gracefully provide compilation error to the else case not having to resort to a void variable an UnreacheableError could be created:
+
+```
+class UnreacheableError extends Error {
+  constructor(_nvr: never, message: message) {
+    super(message)
+  }
+}
+
+...
+else {
+  throw new UnreacheableError(myVehicle, `Unexpected vehicle type: ${myVehicle}`) // as soon as all the possibilities are not exhausted by the narrowing type guard, typescript will complain that myVehicle is not never anymore giving a nice compilation error.
+}
+```
+
 
 ##### Notes
 
