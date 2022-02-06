@@ -470,7 +470,7 @@ function myClickHandler(this: HTMLButtonElement, event: Event) {
   this.disabled = true; // all properties from the button element are now available and we have type safety 
 }
 
-// Now we would have to bind the expected parameter with the function or use the call function to provide the correct this scope
+// Now we would have to bind the expected parameter with the function or use the call function to provide the correct this scope (or apply)
 
 const myButton = document.getElementsByTagName("button")[0];
 myClickHandler.call(myButton, new Event("click"))
@@ -481,6 +481,59 @@ boundHandler(new Event("click"))
 
 *In other words, typescript does not know that the function was wired with a DOM element.
 
+### Classes
+
+#### Access Modifier Keywords
+
+Typescript has only three access modifiers - private, public and protected. Their functionality are pretty much the same as in any other programming language - public means that everybody has access, private only the class itself and protected the class itself and its subclasses.
+
+```
+class Car {
+  public make: string
+  protected vinNumber: number
+  private doorLockCode: string
+  // the same applies to functions and methods
+
+  constructor(make: string, ...) {
+    this.make = make
+  }
+
+  protected unlockAllDoors() {
+    ...
+  }
+}
+
+// vanilla javascript introduced the concept of private field on version 3.8 and it is done with the hash character:
+class Car {
+  public make: string
+  #doorLockCode: string
+}
+```
+ 
+While the keyword `readonly` is not a access modifier per se as it has nothing to do with visibility, it can be used with class fields.
+It is about (re)assignability than immutability - not allowing to point to something new rather than changing.
+
+```
+class Car {
+  public readonly year: number;
+
+  updateYear() {
+    this.year++ // compilation error
+  }
+}
+```
+
+#### Param properties
+
+It is a nice and convenient way of avoiding repetition (in the example above, each property was written 4 times: 1 for the field itself, 1 in the constructor args and 2 to assign the constructor parameter into the field).
+
+```
+class Car {
+  constructor(public make: string, public model: string, ...) {
+    
+  }
+}
+```
 
 ##### Notes
 
