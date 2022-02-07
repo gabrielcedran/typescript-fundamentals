@@ -731,6 +731,71 @@ maybeCar // CarLike
 Type guards are the glue between compile time validation and runtime behaviour.
 
 
+#### Nullish (null, undefined and void)
+
+Null indicates that there is a value for something and that value is nothing. Example:
+
+```
+const x = {
+  email: 'abc',
+  secondaryEmail: null // there is no secondary email.
+}
+```
+
+Undefined generally means there's been a value defined yet. 
+
+```
+const formInProgress = {
+  createdAt: new Date(),
+  data: new FormData(),
+  completedAt: undefined // this value hasn't been provided yet
+}
+```
+
+Void should be used explicitily for function returns and it means that the return value of the function should be ignored.
+
+##### Non-null assertion operator
+The non-null assertion operator (!.) is used to cast away the possibility that a value might be `null` or `undefined`.
+
+The value could still be null and this operator just tells typescript to ignore that possibility - in case the value is missing, the familiar error `cannot call foo on undefined` will be thrown.
+
+```
+type GroceryCart = {
+  fruits?: { name: string; qty: number }[]
+  vegetables?: { name: string; qty: number }[]
+}
+
+const cart: GroceryCart = {}
+
+cart.fruits.push({ name: "kumkuat", qty: 1 }) // typescript says it is possibly null and gives a compilation error
+
+cart.fruits!.push({ name: "kumkuat", qty: 1 }) // not anymore, but in this case the previously mentioned error will 
+```
+
+##### Definite assignment operator
+
+Typscript enforces you to assign properties during initialization via constructors. If a property is not set, typescript show a compilation error. It happens that sometimes properties are not set directly on the constructor level but within a block of code and even though it is set synchronously typescript does not have a way of asserting it.
+
+In order to tell typescript that you know the value will be available at construction time, it is necessary to use the `definite assignment operator (!:)`
+
+```
+class ThingWithAsyncSetup {
+  setupPromise: Promise<any>
+  isSetup!: boolean // definite assignment operator
+  constructor() {
+    this.setupPromise = new Promise((resolve) => {
+      this.isSetup = false // this assignment will happen synchronous as it will be executed immediately when the promise is fired
+      return this.doSetup()
+    }).then(() => {
+      this.isSetup = true
+    })
+  }
+
+  private async doSetup() {
+    // some async stuff
+  }
+}
+```
 
 ##### Notes
 
