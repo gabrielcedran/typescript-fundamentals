@@ -797,6 +797,67 @@ class ThingWithAsyncSetup {
 }
 ```
 
+### Generics
+
+Generics are a way of creating types that are expressed in terms of other types. It leverage reuse not renouncing type safety, that is all that typescript is about.
+
+Weak generic solution renouncing all type safety without generics - thing that we don't want to.
+```
+function listToDict(
+  list: any[],
+  idGen: (arg: any) => string
+): { [k: string]: any } {
+  const dict: { [k: string]: any } = {}
+
+  list.forEach((element) => {
+    const dictKey = idGen(element)
+    dict[dictKey] = element
+  })
+
+  return dict
+}
+
+interface PhoneInfo {
+  customerId: string
+  phoneNumber: string
+}
+
+const phoneList: PhoneInfo[] = [{customerId: 'asd', phoneNumber: 'asdasd'}, {customerId: 'sad', phoneNumber: 'sadasd'}]
+const dict = listToDict(phoneList, (p) => p.customerId)
+dict.this.does.not.exist.and.will.blow.up.at.runtime;
+```
+
+Generic solution with type safety enforced:
+```
+function listToDict<T>(
+  list: T[],
+  idGen: (arg: T) => string
+): { [k: string]: T } {
+  const dict: { [k: string]: T } = {} // return a dictionary with arbitrary keys (index signature) that store the generic type T
+
+  list.forEach((element) => {
+    const dictKey = idGen(element)
+    dict[dictKey] = element
+  })
+
+  return dict
+}
+
+interface PhoneInfo {
+  customerId: string
+  phoneNumber: string
+}
+
+const phoneList: PhoneInfo[] = [{customerId: 'asd', phoneNumber: 'asdasd'}, {customerId: 'sad', phoneNumber: 'sadasd'}]
+const dict = listToDict<PhoneInfo>(phoneList, (p) => p.customerId)
+// even if the types weren't explicitly define in any of the two previous lines, typescript would be able to stick at least to the type structure (an array of arbitrary keys that store types that contain customerId and phoneNumber). 
+
+dict.key.{customerId, phoneNumber} // typescript can still provide type safety because it nows the return object will be a dictionary of arbitrary key and that each key will store a PhoneInfo. In this case it would only be necessary to ensure that the key is present.
+
+dict.key.somethingElse // it would case compilation error.
+```
+
+
 ##### Notes
 
 Type systems:
