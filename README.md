@@ -857,6 +857,65 @@ dict.key.{customerId, phoneNumber} // typescript can still provide type safety b
 dict.key.somethingElse // it would case compilation error.
 ```
 
+##### Generic constraints
+
+Generic constraints allow us to describe the `minimum requirement` for a type param. It enables hight level of flexibility while still providing minimal structure and behaviour:
+
+```
+interface HasId {
+  id: string
+}
+
+interface Dict<T> {
+  [k: string]: T
+}
+
+// similar to the previous example but enforces that the provided object has at least an id. It will still return expected complete object
+
+function listToDict<T extends HasId>(
+  list: T[]
+): Dict<T>  {
+  const dict: { [k: string]: T } = {} // return a dictionary with arbitrary keys (index signature) that store the generic type T
+
+  list.forEach((element) => {
+    const dictKey = element.id
+    dict[dictKey] = element
+  })
+
+  return dict
+}
+
+const obj = {
+  id: "a",
+  abc: "asdd"
+}
+
+const result = listToDict([obj]);
+result.a.id // a is the key of the dictionary
+result.a.abc
+result.a.def // compilataion error as the provided object does not have a def property. 
+```
+
+
+#### Casting
+
+Generally to cast from one type to another, the keyword `as` is used:
+
+```
+const sameAs = window as any as number
+```
+
+However it is possible to achieve the same with functions and it could be dangerous (aka convenience cast):
+
+```
+function returnAs<T>(arg: any): T {
+  return arg // casts to T and it is dangerous and typescript is not able to help much here as arg could be anything, include someting that is castable to T. 
+}
+
+const first = returnAs<number>(window) // no compilation error but will certainly blow up at runtime
+```
+
+* Don't make things generic unless there's real value. Premature abstraction is bad and makes it harder for you and others understand your code. *
 
 ##### Notes
 
